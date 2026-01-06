@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UltraStore Pro v2.0 | Auto-Login</title>
+    <title>UltraStore Pro v2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,9 +14,8 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; }
         header { width: 100%; background: #1e293b; color: white; padding: 1rem 0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         
-        /* Auth Screen */
         #auth-screen { position: fixed; inset: 0; background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .auth-card { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; }
         
         .container { max-width: 1200px; width: 95%; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
@@ -26,17 +26,12 @@
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
         .btn { cursor: pointer; border: none; border-radius: 8px; padding: 12px; font-weight: 600; width: 100%; margin-top: 5px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: var(--text); }
-        .btn-sync { background: #8b5cf6; color: white; margin-bottom: 15px; }
-
+        
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-box { padding: 15px; border-radius: 10px; color: white; text-align: center; }
 
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .product-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; position: relative; }
-        .product-card img { width: 100%; height: 120px; object-fit: cover; }
-        .card-body { padding: 12px; }
-        .menu-btn { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
+        .product-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -45,7 +40,7 @@
 <div id="auth-screen">
     <div class="auth-card">
         <h2>UltraStore Login</h2>
-        <input type="text" id="userKey" placeholder="Username">
+        <input type="text" id="userKey" placeholder="Email (admin@test.com)">
         <input type="password" id="passKey" placeholder="Password">
         <button class="btn btn-primary" onclick="login()">Open Dashboard</button>
     </div>
@@ -58,12 +53,9 @@
 
 <div class="container">
     <div class="main-content">
-        <button class="btn btn-sync" onclick="syncData()">🔄 Sync All Changes</button>
-
         <section>
             <h2>Inventory Management</h2>
-            <input type="text" id="searchInput" placeholder="🔍 Search products..." onkeyup="filterProducts()">
-            <div id="productsDisplay" class="products-grid"></div>
+            <div id="productsDisplay" class="products-grid">Loading products...</div>
         </section>
 
         <section>
@@ -78,7 +70,7 @@
                     <div id="expVal" style="font-size: 1.5rem; font-weight: bold;">$0.00</div>
                 </div>
             </div>
-            <div id="profitSummary" style="padding: 15px; border-radius: 8px; background: #f1f5f9; font-weight: 600; text-align: center;"></div>
+            <div id="profitSummary" style="padding: 15px; border-radius: 8px; background: #f1f5f9; font-weight: bold; text-align: center;">Net Profit: $0.00</div>
         </section>
     </div>
 
@@ -93,11 +85,8 @@
         <section>
             <h2>Add Product</h2>
             <input id="pName" placeholder="Product Name">
-            <div style="display: flex; gap: 5px;">
-                <input id="pQty" type="number" placeholder="Qty">
-                <input id="pPrice" type="number" placeholder="Price">
-            </div>
-            <input type="file" id="pImg" accept="image/*">
+            <input id="pQty" type="number" placeholder="Quantity">
+            <input id="pPrice" type="number" placeholder="Price per Unit">
             <button class="btn btn-primary" onclick="addProduct()">Add to Inventory</button>
         </section>
 
@@ -108,83 +97,144 @@
             <button class="btn btn-primary" style="background: #64748b;" onclick="addExpense()">Add Expense</button>
         </section>
         
-        <button class="btn" style="color: var(--danger);" onclick="logout()">Logout / Switch User</button>
+        <button class="btn" style="color: var(--danger);" onclick="logout()">Logout</button>
     </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDPPQe2pO2kKhQ8CmvhBTRbW55C_SxcqB0",
-    authDomain: "joekids-d5467.firebaseapp.com",
-    projectId: "joekids-d5467",
-    databaseURL: "https://joekids-d5467-default-rtdb.firebaseio.com",
-    storageBucket: "joekids-d5467.firebasestorage.app",
-    messagingSenderId: "17185945134",
-    appId: "1:17185945134:web:56fe668555b48618ca91bf"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPPQe2pO2kKhQ8CmvhBTRbW55C_SxcqB0",
+        authDomain: "joekids-d5467.firebaseapp.com",
+        projectId: "joekids-d5467",
+        databaseURL: "https://joekids-d5467-default-rtdb.firebaseio.com",
+        storageBucket: "joekids-d5467.firebasestorage.app",
+        messagingSenderId: "17185945134",
+        appId: "1:17185945134:web:56fe668555b48618ca91bf"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-  // --- LOGIN & LOGOUT ---
-  window.login = () => {
-    const email = document.getElementById('userKey').value;
-    const pass = document.getElementById('passKey').value;
-    signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
-  };
-  window.logout = () => signOut(auth).then(() => location.reload());
+    // LOGIN
+    window.login = () => {
+        const email = document.getElementById('userKey').value;
+        const pass = document.getElementById('passKey').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Login Failed: " + err.message));
+    };
 
-  // --- ADD PRODUCT ---
-  window.addProduct = () => {
-    const name = document.getElementById('pName').value;
-    const qty = parseInt(document.getElementById('pQty').value);
-    const price = parseFloat(document.getElementById('pPrice').value);
-    if(!name || !qty || !price) return alert("Fill all fields");
+    // LOGOUT
+    window.logout = () => signOut(auth).then(() => location.reload());
 
-    push(ref(db, 'inventory/'), { name, qty, price, code: Math.floor(1000 + Math.random() * 9000) });
-    alert("Saved!");
-  };
+    // ADD PRODUCT
+    window.addProduct = () => {
+        const name = document.getElementById('pName').value;
+        const qty = parseInt(document.getElementById('pQty').value);
+        const price = parseFloat(document.getElementById('pPrice').value);
+        const code = Math.floor(1000 + Math.random() * 9000); // Generate simple 4-digit code
 
-  // --- LOG EXPENSE ---
-  window.addExpense = () => {
-    const desc = document.getElementById('exDesc').value;
-    const amt = parseFloat(document.getElementById('exAmt').value);
-    if(desc && amt) push(ref(db, 'expenses/'), { desc, amt, date: Date.now() });
-  };
+        if(!name || isNaN(qty) || isNaN(price)) return alert("Please fill all fields correctly");
 
-  // --- SYNC DATA ---
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('userInfo').innerText = `Logged in: ${user.email}`;
+        push(ref(db, 'inventory/'), { name, qty, price, code })
+            .then(() => {
+                alert("Product Added!");
+                document.getElementById('pName').value = '';
+                document.getElementById('pQty').value = '';
+                document.getElementById('pPrice').value = '';
+            });
+    };
 
-      // Sync Inventory
-      onValue(ref(db, 'inventory/'), (snap) => {
-        const display = document.getElementById('productsDisplay');
-        display.innerHTML = '';
-        let totalRev = 0;
-        snap.forEach(child => {
-          const p = child.val();
-          display.innerHTML += `<div class="product-card"><div class="card-body"><b>${p.name}</b><br>$${p.price} (Qty: ${p.qty})<br><small>Code: ${p.code}</small></div></div>`;
-          totalRev += (p.price * p.qty); // Simplified revenue logic for project
+    // LOG EXPENSE
+    window.addExpense = () => {
+        const desc = document.getElementById('exDesc').value;
+        const amt = parseFloat(document.getElementById('exAmt').value);
+        if(!desc || isNaN(amt)) return alert("Enter valid expense details");
+
+        push(ref(db, 'expenses/'), { desc, amt, date: Date.now() })
+            .then(() => {
+                alert("Expense Recorded");
+                document.getElementById('exDesc').value = '';
+                document.getElementById('exAmt').value = '';
+            });
+    };
+
+    // HANDLE SALE (Subtracts Qty and adds to Revenue logic)
+    window.handleSale = async () => {
+        const code = document.getElementById('sellCode').value;
+        const sQty = parseInt(document.getElementById('sellQty').value);
+        
+        const invRef = ref(db, 'inventory/');
+        const snapshot = await get(invRef);
+        
+        let found = false;
+        snapshot.forEach((child) => {
+            const p = child.val();
+            if(p.code == code) {
+                found = true;
+                if(p.qty >= sQty) {
+                    update(ref(db, `inventory/${child.key}`), { qty: p.qty - sQty });
+                    alert("Sale Successful!");
+                } else {
+                    alert("Not enough stock!");
+                }
+            }
         });
-        document.getElementById('revVal').innerText = `$${totalRev.toFixed(2)}`;
-      });
+        if(!found) alert("Product code not found!");
+    };
 
-      // Sync Expenses
-      onValue(ref(db, 'expenses/'), (snap) => {
-        let totalExp = 0;
-        snap.forEach(child => { totalExp += child.val().amt; });
-        document.getElementById('expVal').innerText = `$${totalExp.toFixed(2)}`;
-      });
+    // SYNC ALL DATA
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('userInfo').innerText = `Active User: ${user.email}`;
+
+            // Listen for Inventory
+            onValue(ref(db, 'inventory/'), (snap) => {
+                const display = document.getElementById('productsDisplay');
+                display.innerHTML = '';
+                let totalInventoryValue = 0;
+
+                if(snap.exists()){
+                    snap.forEach(child => {
+                        const p = child.val();
+                        display.innerHTML += `
+                            <div class="product-card">
+                                <b>${p.name}</b><br>
+                                Price: $${p.price}<br>
+                                Stock: ${p.qty}<br>
+                                <small style="color:var(--primary)">CODE: ${p.code}</small>
+                            </div>`;
+                        totalInventoryValue += (p.price * p.qty);
+                    });
+                } else {
+                    display.innerHTML = "No products in database.";
+                }
+                document.getElementById('revVal').innerText = `$${totalInventoryValue.toFixed(2)}`;
+                calculateProfit();
+            });
+
+            // Listen for Expenses
+            onValue(ref(db, 'expenses/'), (snap) => {
+                let totalExp = 0;
+                snap.forEach(child => { totalExp += parseFloat(child.val().amt || 0); });
+                document.getElementById('expVal').innerText = `$${totalExp.toFixed(2)}`;
+                calculateProfit();
+            });
+        }
+    });
+
+    function calculateProfit() {
+        const rev = parseFloat(document.getElementById('revVal').innerText.replace('$',''));
+        const exp = parseFloat(document.getElementById('expVal').innerText.replace('$',''));
+        const profit = rev - exp;
+        const div = document.getElementById('profitSummary');
+        div.innerText = `Net Profit: $${profit.toFixed(2)}`;
+        div.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
     }
-  });
 </script>
 </body>
 </html>
-
