@@ -112,134 +112,30 @@
     </div>
 </div>
 
-<script>
-    let inventory = [];
-    let sales = [];
-    let expenses = [];
-    let username = "";
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-    // CHECK FOR SAVED "COOKIE" ON START
-    window.onload = function() {
-        const rememberedUser = localStorage.getItem('ultra_active_session');
-        if (rememberedUser) {
-            username = rememberedUser;
-            startDashboard();
-        }
-    }
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPPQe2pO2kKhQ8CmvhBTRbW55C_SxcqB0",
+    authDomain: "joekids-d5467.firebaseapp.com",
+    projectId: "joekids-d5467",
+    storageBucket: "joekids-d5467.firebasestorage.app",
+    messagingSenderId: "17185945134",
+    appId: "1:17185945134:web:56fe668555b48618ca91bf",
+    measurementId: "G-D2XPP18LG8"
+  };
 
-    function login() {
-        username = document.getElementById('userKey').value.trim();
-        if(!username) return alert("Please enter a username");
-        
-        // SAVE "COOKIE" (Remember the user)
-        localStorage.setItem('ultra_active_session', username);
-        startDashboard();
-    }
-
-    function startDashboard() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('userInfo').innerText = "Logged in as: " + username;
-        
-        const saved = localStorage.getItem('ultra_data_' + username);
-        if(saved) {
-            const data = JSON.parse(saved);
-            inventory = data.inventory || [];
-            sales = data.sales || [];
-            expenses = data.expenses || [];
-        }
-        render();
-    }
-
-    function syncData() {
-        const btn = document.querySelector('.btn-sync');
-        btn.innerText = "Saving...";
-        localStorage.setItem('ultra_data_' + username, JSON.stringify({ inventory, sales, expenses }));
-        setTimeout(() => {
-            btn.innerText = "✅ Saved";
-            setTimeout(() => btn.innerText = "🔄 Sync All Changes", 2000);
-            render();
-        }, 500);
-    }
-
-    function render() {
-        const grid = document.getElementById('productsDisplay');
-        grid.innerHTML = inventory.map((p, index) => `
-            <div class="product-card">
-                <button class="menu-btn" onclick="deleteItem(${index})">×</button>
-                <img src="${p.image || 'https://via.placeholder.com/150?text=No+Image'}">
-                <div class="card-body">
-                    <strong>${p.name}</strong><br>
-                    <small>Code: ${p.code}</small>
-                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                        <span style="color: var(--primary); font-weight: bold;">$${Number(p.price).toFixed(2)}</span>
-                        <span style="font-size: 11px;">Stock: ${p.quantity}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        const totalRev = sales.reduce((a, b) => a + b.total, 0);
-        const totalExp = expenses.reduce((a, b) => a + b.amount, 0);
-        document.getElementById('revVal').innerText = `$${totalRev.toFixed(2)}`;
-        document.getElementById('expVal').innerText = `$${totalExp.toFixed(2)}`;
-        const net = totalRev - totalExp;
-        document.getElementById('profitSummary').innerHTML = `Net Profit: <span style="color: ${net >= 0 ? 'var(--success)' : 'var(--danger)'}">$${net.toFixed(2)}</span>`;
-    }
-
-    function addProduct() {
-        const name = document.getElementById('pName').value;
-        const qty = parseInt(document.getElementById('pQty').value);
-        const price = parseFloat(document.getElementById('pPrice').value);
-        const file = document.getElementById('pImg').files[0];
-        const code = Math.floor(1000 + Math.random() * 9000);
-
-        const saveItem = (imgData = "") => {
-            inventory.push({ name, quantity: qty, price, code, image: imgData });
-            syncData();
-        };
-
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = () => saveItem(reader.result);
-            reader.readAsDataURL(file);
-        } else { saveItem(); }
-    }
-
-    function handleSale() {
-        const code = parseInt(document.getElementById('sellCode').value);
-        const qty = parseInt(document.getElementById('sellQty').value);
-        const item = inventory.find(i => i.code === code);
-        if(item && item.quantity >= qty) {
-            item.quantity -= qty;
-            sales.push({ total: item.price * qty });
-            syncData();
-        }
-    }
-
-    function addExpense() {
-        const amt = parseFloat(document.getElementById('exAmt').value);
-        if(amt) {
-            expenses.push({ amount: amt });
-            syncData();
-        }
-    }
-
-    function deleteItem(idx) {
-        inventory.splice(idx, 1);
-        syncData();
-    }
-
-    function filterProducts() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const cards = document.querySelectorAll('.product-card');
-        cards.forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
-    }
-
-    function logout() {
-        // Remove the "Remember Me" cookie
-        localStorage.removeItem('ultra_active_session');
-        location.reload();
-    }
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 </script>
+
 </body>
 </html>
+        
