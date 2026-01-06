@@ -113,14 +113,10 @@
 </div>
 
 <script type="module">
-  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  // 1. You must import the Auth services
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyDPPQe2pO2kKhQ8CmvhBTRbW55C_SxcqB0",
     authDomain: "joekids-d5467.firebaseapp.com",
@@ -131,11 +127,25 @@
     measurementId: "G-D2XPP18LG8"
   };
 
-  // Initialize Firebase
+  // Initialize Firebase and Auth
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+
+  // 2. Define the login function and make it accessible to the button
+  window.login = async () => {
+    const email = document.getElementById('userKey').value;
+    const pass = document.getElementById('passKey').value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      alert("Success! Welcome to the dashboard.");
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('userInfo').innerText = `Logged in as: ${userCredential.user.email}`;
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
+  };
 </script>
 
 </body>
 </html>
-        
