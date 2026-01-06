@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UltraStore Pro v2.0 | Auto-Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --success: #22c55e; --danger: #ef4444;
+            --bg: #f8fafc; --card: #ffffff; --text: #1e293b;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; background: #1e293b; color: white; padding: 1rem 0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        /* Auth Screen */
+        #auth-screen { position: fixed; inset: 0; background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        
+        .container { max-width: 1200px; width: 95%; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+        .btn { cursor: pointer; border: none; border-radius: 8px; padding: 12px; font-weight: 600; width: 100%; margin-top: 5px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: var(--text); }
+        .btn-sync { background: #8b5cf6; color: white; margin-bottom: 15px; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { padding: 15px; border-radius: 10px; color: white; text-align: center; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .product-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; position: relative; }
+        .product-card img { width: 100%; height: 120px; object-fit: cover; }
+        .card-body { padding: 12px; }
+        .menu-btn { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div class="auth-card">
+        <h2>UltraStore Login</h2>
+        <input type="text" id="userKey" placeholder="Username">
+        <input type="password" id="passKey" placeholder="Password">
+        <button class="btn btn-primary" onclick="login()">Open Dashboard</button>
+    </div>
+</div>
+
+<header>
+    <h1>🛒 UltraStore <span style="font-weight: 300;">Pro v2.0</span></h1>
+    <div id="userInfo" style="font-size: 12px; opacity: 0.8;"></div>
+</header>
+
+<div class="container">
+    <div class="main-content">
+        <button class="btn btn-sync" onclick="syncData()">🔄 Sync All Changes</button>
+
+        <section>
+            <h2>Inventory Management</h2>
+            <input type="text" id="searchInput" placeholder="🔍 Search products..." onkeyup="filterProducts()">
+            <div id="productsDisplay" class="products-grid"></div>
+        </section>
+
+        <section>
+            <h2>Financial Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-box" style="background: var(--success);">
+                    <small>Total Revenue</small>
+                    <div id="revVal" style="font-size: 1.5rem; font-weight: bold;">$0.00</div>
+                </div>
+                <div class="stat-box" style="background: var(--danger);">
+                    <small>Total Expenses</small>
+                    <div id="expVal" style="font-size: 1.5rem; font-weight: bold;">$0.00</div>
+                </div>
+            </div>
+            <div id="profitSummary" style="padding: 15px; border-radius: 8px; background: #f1f5f9; font-weight: 600; text-align: center;"></div>
+        </section>
+    </div>
+
+    <div class="sidebar">
+        <section>
+            <h2>Quick Sale (POS)</h2>
+            <input type="number" id="sellCode" placeholder="Enter Product Code">
+            <input type="number" id="sellQty" value="1" min="1">
+            <button class="btn btn-primary" onclick="handleSale()">Complete Sale</button>
+        </section>
+
+        <section>
+            <h2>Add Product</h2>
+            <input id="pName" placeholder="Product Name">
+            <div style="display: flex; gap: 5px;">
+                <input id="pQty" type="number" placeholder="Qty">
+                <input id="pPrice" type="number" placeholder="Price">
+            </div>
+            <input type="file" id="pImg" accept="image/*">
+            <button class="btn btn-primary" onclick="addProduct()">Add to Inventory</button>
+        </section>
+
+        <section>
+            <h2>Log Expense</h2>
+            <input id="exDesc" placeholder="Description">
+            <input id="exAmt" type="number" placeholder="Amount">
+            <button class="btn btn-primary" style="background: #64748b;" onclick="addExpense()">Add Expense</button>
+        </section>
+        
+        <button class="btn" style="color: var(--danger);" onclick="logout()">Logout / Switch User</button>
+    </div>
+</div>
+
+<script>
+    let inventory = [];
+    let sales = [];
+    let expenses = [];
+    let username = "";
+
+    // CHECK FOR SAVED "COOKIE" ON START
+    window.onload = function() {
+        const rememberedUser = localStorage.getItem('ultra_active_session');
+        if (rememberedUser) {
+            username = rememberedUser;
+            startDashboard();
+        }
+    }
+
+    function login() {
+        username = document.getElementById('userKey').value.trim();
+        if(!username) return alert("Please enter a username");
+        
+        // SAVE "COOKIE" (Remember the user)
+        localStorage.setItem('ultra_active_session', username);
+        startDashboard();
+    }
+
+    function startDashboard() {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('userInfo').innerText = "Logged in as: " + username;
+        
+        const saved = localStorage.getItem('ultra_data_' + username);
+        if(saved) {
+            const data = JSON.parse(saved);
+            inventory = data.inventory || [];
+            sales = data.sales || [];
+            expenses = data.expenses || [];
+        }
+        render();
+    }
+
+    function syncData() {
+        const btn = document.querySelector('.btn-sync');
+        btn.innerText = "Saving...";
+        localStorage.setItem('ultra_data_' + username, JSON.stringify({ inventory, sales, expenses }));
+        setTimeout(() => {
+            btn.innerText = "✅ Saved";
+            setTimeout(() => btn.innerText = "🔄 Sync All Changes", 2000);
+            render();
+        }, 500);
+    }
+
+    function render() {
+        const grid = document.getElementById('productsDisplay');
+        grid.innerHTML = inventory.map((p, index) => `
+            <div class="product-card">
+                <button class="menu-btn" onclick="deleteItem(${index})">×</button>
+                <img src="${p.image || 'https://via.placeholder.com/150?text=No+Image'}">
+                <div class="card-body">
+                    <strong>${p.name}</strong><br>
+                    <small>Code: ${p.code}</small>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span style="color: var(--primary); font-weight: bold;">$${Number(p.price).toFixed(2)}</span>
+                        <span style="font-size: 11px;">Stock: ${p.quantity}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        const totalRev = sales.reduce((a, b) => a + b.total, 0);
+        const totalExp = expenses.reduce((a, b) => a + b.amount, 0);
+        document.getElementById('revVal').innerText = `$${totalRev.toFixed(2)}`;
+        document.getElementById('expVal').innerText = `$${totalExp.toFixed(2)}`;
+        const net = totalRev - totalExp;
+        document.getElementById('profitSummary').innerHTML = `Net Profit: <span style="color: ${net >= 0 ? 'var(--success)' : 'var(--danger)'}">$${net.toFixed(2)}</span>`;
+    }
+
+    function addProduct() {
+        const name = document.getElementById('pName').value;
+        const qty = parseInt(document.getElementById('pQty').value);
+        const price = parseFloat(document.getElementById('pPrice').value);
+        const file = document.getElementById('pImg').files[0];
+        const code = Math.floor(1000 + Math.random() * 9000);
+
+        const saveItem = (imgData = "") => {
+            inventory.push({ name, quantity: qty, price, code, image: imgData });
+            syncData();
+        };
+
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = () => saveItem(reader.result);
+            reader.readAsDataURL(file);
+        } else { saveItem(); }
+    }
+
+    function handleSale() {
+        const code = parseInt(document.getElementById('sellCode').value);
+        const qty = parseInt(document.getElementById('sellQty').value);
+        const item = inventory.find(i => i.code === code);
+        if(item && item.quantity >= qty) {
+            item.quantity -= qty;
+            sales.push({ total: item.price * qty });
+            syncData();
+        }
+    }
+
+    function addExpense() {
+        const amt = parseFloat(document.getElementById('exAmt').value);
+        if(amt) {
+            expenses.push({ amount: amt });
+            syncData();
+        }
+    }
+
+    function deleteItem(idx) {
+        inventory.splice(idx, 1);
+        syncData();
+    }
+
+    function filterProducts() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.product-card');
+        cards.forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+    }
+
+    function logout() {
+        // Remove the "Remember Me" cookie
+        localStorage.removeItem('ultra_active_session');
+        location.reload();
+    }
+</script>
+</body>
+</html>
