@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UltraStore Pro v2.0 - Business Manager</title>
+    <title>UltraStore Pro v2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,22 +14,23 @@
         header { width: 100%; background: #1e293b; color: white; padding: 1rem 0; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         
         #auth-screen { position: fixed; inset: 0; background: #1e293b; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .auth-card { background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center; }
         
         .container { max-width: 1200px; width: 95%; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 
         section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--bg); padding-bottom: 10px; display: flex; justify-content: space-between; }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
 
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
         .btn { cursor: pointer; border: none; border-radius: 8px; padding: 12px; font-weight: 600; width: 100%; margin-top: 5px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         
-        .customer-card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; margin-bottom: 15px; background: #fff; }
-        .receipt-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { padding: 15px; border-radius: 10px; color: white; text-align: center; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .product-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; position: relative; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -38,7 +39,7 @@
 <div id="auth-screen">
     <div class="auth-card">
         <h2>UltraStore Login</h2>
-        <input type="text" id="userKey" placeholder="Email">
+        <input type="text" id="userKey" placeholder="Email (admin@test.com)">
         <input type="password" id="passKey" placeholder="Password">
         <button class="btn btn-primary" onclick="login()">Open Dashboard</button>
     </div>
@@ -46,54 +47,63 @@
 
 <header>
     <h1>🛒 UltraStore <span style="font-weight: 300;">Pro v2.0</span></h1>
+    <div id="userInfo" style="font-size: 12px; opacity: 0.8;"></div>
 </header>
 
 <div class="container">
     <div class="main-content">
-        <section style="background: var(--primary); color: white;">
-            <h2 style="border:none; color: white;">Business Grand Total (All Receipts)</h2>
-            <div id="globalReceiptTotal" style="font-size: 2.5rem; font-weight: bold;">$0.00</div>
+        <section>
+            <h2>Inventory Management</h2>
+            <div id="productsDisplay" class="products-grid">Loading products...</div>
         </section>
 
         <section>
-            <h2>Shop Customers</h2>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input id="custName" placeholder="Enter Shop/Customer Name">
-                <button class="btn btn-primary" style="width: 150px;" onclick="addCustomer()">Add Shop</button>
+            <h2>Financial Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-box" style="background: var(--success);">
+                    <small>Total Revenue</small>
+                    <div id="revVal" style="font-size: 1.5rem; font-weight: bold;">$0.00</div>
+                </div>
+                <div class="stat-box" style="background: var(--danger);">
+                    <small>Total Expenses</small>
+                    <div id="expVal" style="font-size: 1.5rem; font-weight: bold;">$0.00</div>
+                </div>
             </div>
-            <div id="customerList">Loading customers...</div>
+            <div id="profitSummary" style="padding: 15px; border-radius: 8px; background: #f1f5f9; font-weight: bold; text-align: center;">Net Profit: $0.00</div>
         </section>
     </div>
 
     <div class="sidebar">
         <section>
-            <h2>Add Inventory</h2>
+            <h2>Quick Sale (POS)</h2>
+            <input type="number" id="sellCode" placeholder="Enter Product Code">
+            <input type="number" id="sellQty" value="1" min="1">
+            <button class="btn btn-primary" onclick="handleSale()">Complete Sale</button>
+        </section>
+
+        <section>
+            <h2>Add Product</h2>
             <input id="pName" placeholder="Product Name">
             <input id="pQty" type="number" placeholder="Quantity">
-            <input id="pPrice" type="number" placeholder="Price">
-            <button class="btn btn-primary" onclick="addProduct()">Save Product</button>
+            <input id="pPrice" type="number" placeholder="Price per Unit">
+            <button class="btn btn-primary" onclick="addProduct()">Add to Inventory</button>
         </section>
-        <button class="btn" style="color: var(--danger);" onclick="logout()">Logout</button>
-    </div>
-</div>
 
-<div id="receiptModal" class="modal hidden">
-    <div class="auth-card" style="width: 350px;">
-        <h3>Add Receipt for <br><span id="targetCustomerName" style="color: var(--primary);"></span></h3>
-        <input type="file" id="rFile" accept="image/*">
-        <input type="text" id="rSerial" placeholder="Serial Number (SN)">
-        <input type="number" id="rAmount" placeholder="Total Amount ($)">
-        <input type="date" id="rDate">
-        <button class="btn btn-primary" id="uploadBtn" onclick="uploadReceipt()">Upload & Save</button>
-        <button class="btn" onclick="closeModal()">Cancel</button>
+        <section>
+            <h2>Log Expense</h2>
+            <input id="exDesc" placeholder="Description">
+            <input id="exAmt" type="number" placeholder="Amount">
+            <button class="btn btn-primary" style="background: #64748b;" onclick="addExpense()">Add Expense</button>
+        </section>
+        
+        <button class="btn" style="color: var(--danger);" onclick="logout()">Logout</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDPPQe2pO2kKhQ8CmvhBTRbW55C_SxcqB0",
@@ -108,108 +118,124 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-    const storage = getStorage(app);
 
-    let activeCustId = null;
-
-    // AUTH
+    // LOGIN
     window.login = () => {
         const email = document.getElementById('userKey').value;
         const pass = document.getElementById('passKey').value;
-        signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
+        signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Login Failed: " + err.message));
     };
+
+    // LOGOUT
     window.logout = () => signOut(auth).then(() => location.reload());
 
-    // CUSTOMERS
-    window.addCustomer = () => {
-        const name = document.getElementById('custName').value;
-        if(!name) return;
-        push(ref(db, 'customers/'), { name: name, dateCreated: Date.now() });
-        document.getElementById('custName').value = '';
-    };
+    // ADD PRODUCT
+    window.addProduct = () => {
+        const name = document.getElementById('pName').value;
+        const qty = parseInt(document.getElementById('pQty').value);
+        const price = parseFloat(document.getElementById('pPrice').value);
+        const code = Math.floor(1000 + Math.random() * 9000); // Generate simple 4-digit code
 
-    window.openReceiptModal = (id, name) => {
-        activeCustId = id;
-        document.getElementById('targetCustomerName').innerText = name;
-        document.getElementById('receiptModal').classList.remove('hidden');
-    };
+        if(!name || isNaN(qty) || isNaN(price)) return alert("Please fill all fields correctly");
 
-    window.closeModal = () => document.getElementById('receiptModal').classList.add('hidden');
-
-    window.uploadReceipt = async () => {
-        const file = document.getElementById('rFile').files[0];
-        const serial = document.getElementById('rSerial').value;
-        const amt = parseFloat(document.getElementById('rAmount').value);
-        const rDate = document.getElementById('rDate').value;
-        const btn = document.getElementById('uploadBtn');
-
-        if(!file || !serial || isNaN(amt) || !rDate) return alert("Please fill all fields!");
-
-        btn.innerText = "Processing...";
-        btn.disabled = true;
-
-        try {
-            const path = sRef(storage, `receipts/${activeCustId}/${Date.now()}_receipt`);
-            const snap = await uploadBytes(path, file);
-            const url = await getDownloadURL(snap.ref);
-
-            await push(ref(db, `customers/${activeCustId}/receipts`), {
-                serial, amount: amt, date: rDate, imageUrl: url
+        push(ref(db, 'inventory/'), { name, qty, price, code })
+            .then(() => {
+                alert("Product Added!");
+                document.getElementById('pName').value = '';
+                document.getElementById('pQty').value = '';
+                document.getElementById('pPrice').value = '';
             });
-
-            alert("Receipt Saved!");
-            closeModal();
-        } catch (e) {
-            alert(e.message);
-        } finally {
-            btn.innerText = "Upload & Save";
-            btn.disabled = false;
-        }
     };
 
-    // SYNC
+    // LOG EXPENSE
+    window.addExpense = () => {
+        const desc = document.getElementById('exDesc').value;
+        const amt = parseFloat(document.getElementById('exAmt').value);
+        if(!desc || isNaN(amt)) return alert("Enter valid expense details");
+
+        push(ref(db, 'expenses/'), { desc, amt, date: Date.now() })
+            .then(() => {
+                alert("Expense Recorded");
+                document.getElementById('exDesc').value = '';
+                document.getElementById('exAmt').value = '';
+            });
+    };
+
+    // HANDLE SALE (Subtracts Qty and adds to Revenue logic)
+    window.handleSale = async () => {
+        const code = document.getElementById('sellCode').value;
+        const sQty = parseInt(document.getElementById('sellQty').value);
+        
+        const invRef = ref(db, 'inventory/');
+        const snapshot = await get(invRef);
+        
+        let found = false;
+        snapshot.forEach((child) => {
+            const p = child.val();
+            if(p.code == code) {
+                found = true;
+                if(p.qty >= sQty) {
+                    update(ref(db, `inventory/${child.key}`), { qty: p.qty - sQty });
+                    alert("Sale Successful!");
+                } else {
+                    alert("Not enough stock!");
+                }
+            }
+        });
+        if(!found) alert("Product code not found!");
+    };
+
+    // SYNC ALL DATA
     onAuthStateChanged(auth, (user) => {
         if (user) {
             document.getElementById('auth-screen').classList.add('hidden');
-            
-            onValue(ref(db, 'customers/'), (snap) => {
-                const list = document.getElementById('customerList');
-                list.innerHTML = '';
-                let globalSum = 0;
+            document.getElementById('userInfo').innerText = `Active User: ${user.email}`;
 
-                snap.forEach(c => {
-                    const cust = c.val();
-                    let custSum = 0;
-                    let rows = '';
+            // Listen for Inventory
+            onValue(ref(db, 'inventory/'), (snap) => {
+                const display = document.getElementById('productsDisplay');
+⦁	                display.innerHTML = '';
+                let totalInventoryValue = 0;
 
-                    if(cust.receipts) {
-                        Object.values(cust.receipts).forEach(r => {
-                            custSum += r.amount;
-                            globalSum += r.amount;
-                            rows += `
-                                <div class="receipt-row">
-                                    <span>${r.date} (SN: ${r.serial})</span>
-                                    <span><b>$${r.amount}</b> | <a href="${r.imageUrl}" target="_blank">View Photo</a></span>
-                                </div>`;
-                        });
-                    }
+                if(snap.exists()){
+                    snap.forEach(child => {
+                        const p = child.val();
+                        display.innerHTML += `
+                            <div class="product-card">
+                                <b>${p.name}</b><br>
+                                Price: $${p.price}<br>
+                                Stock: ${p.qty}<br>
+                                <small style="color:var(--primary)">CODE: ${p.code}</small>
+                            </div>`;
+                        totalInventoryValue += (p.price * p.qty);
+                    });
+                } else {
+                    display.innerHTML = "No products in database.";
+                }
+                document.getElementById('revVal').innerText = `$${totalInventoryValue.toFixed(2)}`;
+                calculateProfit();
+            });
 
-                    list.innerHTML += `
-                        <div class="customer-card">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong>${cust.name}</strong>
-                                <span style="color:var(--success); font-weight:bold;">Total: $${custSum.toFixed(2)}</span>
-                            </div>
-                            <button class="btn" style="width:auto; padding:5px 10px; font-size:11px; margin:10px 0;" 
-                                onclick="openReceiptModal('${c.key}', '${cust.name}')">+ Upload Receipt</button>
-                            <div>${rows}</div>
-                        </div>`;
-                });
-                document.getElementById('globalReceiptTotal').innerText = `$${globalSum.toFixed(2)}`;
+            // Listen for Expenses
+            onValue(ref(db, 'expenses/'), (snap) => {
+                let totalExp = 0;
+                snap.forEach(child => { totalExp += parseFloat(child.val().amt || 0); });
+                document.getElementById('expVal').innerText = `$${totalExp.toFixed(2)}`;
+                calculateProfit();
             });
         }
     });
+
+    function calculateProfit() {
+        const rev = parseFloat(document.getElementById('revVal').innerText.replace('$',''));
+        const exp = parseFloat(document.getElementById('expVal').innerText.replace('$',''));
+        const profit = rev - exp;
+        const div = document.getElementById('profitSummary');
+        div.innerText = `Net Profit: $${profit.toFixed(2)}`;
+        div.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
 </script>
 </body>
 </html>
+
 
